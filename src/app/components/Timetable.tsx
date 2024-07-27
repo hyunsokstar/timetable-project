@@ -11,6 +11,7 @@ const Timetable: React.FC = () => {
     const [events, setEvents] = useState<CustomEvent[]>([
         {
             event_id: 1,
+            contentId: 1,
             title: "수학",
             teacher: "김선생",
             start: new Date("2024-07-21T09:00:00"),
@@ -19,6 +20,7 @@ const Timetable: React.FC = () => {
         },
         {
             event_id: 2,
+            contentId: 2,
             title: "영어",
             teacher: "이선생",
             start: new Date("2024-07-21T10:00:00"),
@@ -27,6 +29,7 @@ const Timetable: React.FC = () => {
         },
         {
             event_id: 3,
+            contentId: 3,
             title: "과학",
             teacher: "박선생",
             start: new Date("2024-07-21T11:00:00"),
@@ -226,6 +229,7 @@ const Timetable: React.FC = () => {
             prevEvents.map(e => e.event_id === updatedEvent.event_id ? updatedEvent : e)
         );
         console.log(`Event ${updatedEvent.event_id} moved successfully`);
+        console.log(`Event ${updatedEvent} ?? `, updatedEvent);
         return updatedEvent;
     };
 
