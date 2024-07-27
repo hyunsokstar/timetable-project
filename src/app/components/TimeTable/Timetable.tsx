@@ -1,8 +1,9 @@
 import React, { useState, ChangeEvent } from 'react';
 import { Scheduler } from "@aldabil/react-scheduler";
 import type { ProcessedEvent, EventActions, EventRendererProps } from "@aldabil/react-scheduler/types";
-import { FaTimes } from 'react-icons/fa';
-import CustomEventComponent from './CustomEventComponent';
+import CustomTimeTableHeader from './CustomTimeTableHeader';
+import CustomTimeTableLeftColumns from './CustomTimeTableLeftColumns';
+import CustomSubjectRenderer from './CustomSubjectRenderer';
 
 interface CustomEvent extends ProcessedEvent {
     teacher?: string;
@@ -11,14 +12,24 @@ interface CustomEvent extends ProcessedEvent {
 }
 
 const Timetable: React.FC = () => {
+    // 현재 날짜를 기준으로 이번 주의 월요일을 찾습니다.
+    const getThisMonday = () => {
+        const today = new Date();
+        const day = today.getDay();
+        const diff = today.getDate() - day + (day === 0 ? -6 : 1); // 일요일이면 전 주 월요일로
+        return new Date(today.setDate(diff));
+    };
+
+    const monday = getThisMonday();
+
     const [events, setEvents] = useState<CustomEvent[]>([
         {
             event_id: 1,
             contentId: 1,
             title: "수학",
             teacher: "김선생",
-            start: new Date("2024-07-21T09:00:00"),
-            end: new Date("2024-07-21T10:00:00"),
+            start: new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 9, 0),
+            end: new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 10, 0),
             color: "#FF5733",
         },
         {
@@ -26,8 +37,8 @@ const Timetable: React.FC = () => {
             contentId: 2,
             title: "영어",
             teacher: "이선생",
-            start: new Date("2024-07-21T10:00:00"),
-            end: new Date("2024-07-21T11:00:00"),
+            start: new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 10, 0),
+            end: new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 11, 0),
             color: "#33FF57",
         },
         {
@@ -35,58 +46,14 @@ const Timetable: React.FC = () => {
             contentId: 3,
             title: "과학",
             teacher: "박선생",
-            start: new Date("2024-07-21T11:00:00"),
-            end: new Date("2024-07-21T12:00:00"),
+            start: new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 11, 0),
+            end: new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 12, 0),
             color: "#3357FF",
         },
     ]);
 
-    const customDayScaleHeader = (day: Date) => {
-        const dayNames = ['월', '화', '수', '목', '금', '토', '일'];
-        const dayIndex = day.getDay();
-
-        return (
-            <div style={{ textAlign: 'center', fontWeight: 'bold', padding: '8px', backgroundColor: '#f0f0f0' }}>
-                {dayNames[dayIndex]}
-            </div>
-        );
-    };
-
-    const customTimeScaleHeader = (hour: string) => {
-        const hourNumber = parseInt(hour, 10);
-        const period = hourNumber - 8;
-
-        if (period >= 1 && period <= 7) {
-            return (
-                <div style={{
-                    textAlign: 'center',
-                    fontSize: '0.8rem',
-                }}>
-                    {period}교시
-                </div>
-            );
-        }
-        return <div></div>;
-    };
-
     const handleDeleteEvent = (eventId: string | number) => {
         setEvents(prevEvents => prevEvents.filter(e => e.event_id !== eventId));
-    };
-
-    const customEventRenderer = (props: EventRendererProps) => {
-        const { event, ...rest } = props;
-        const customEvent = event as CustomEvent;
-        const startHour = event.start.getHours();
-        const endHour = event.end.getHours();
-        const duration = endHour - startHour;
-        // const [isHovered, setIsHovered] = useState(false);
-
-        return (
-            <CustomEventComponent
-                {...props}
-                handleDeleteEvent={handleDeleteEvent}
-            />
-        );
     };
 
     const customEditor = (scheduler: any) => {
@@ -236,8 +203,8 @@ const Timetable: React.FC = () => {
                     startHour: 9,
                     endHour: 16,
                     step: 60,
-                    headRenderer: customDayScaleHeader,
-                    hourRenderer: customTimeScaleHeader
+                    headRenderer: CustomTimeTableHeader,
+                    hourRenderer: CustomTimeTableLeftColumns
                 }}
                 onConfirm={handleConfirm}
                 onEventDrop={handleEventDrop}
@@ -247,8 +214,11 @@ const Timetable: React.FC = () => {
                 navigation={false}
                 disableViewNavigator={true}
                 hourFormat="24"
-                eventRenderer={customEventRenderer}
+                eventRenderer={(props: EventRendererProps) => (
+                    <CustomSubjectRenderer {...props} handleDeleteEvent={handleDeleteEvent} />
+                )}
                 customEditor={customEditor}
+                selectedDate={monday} // 이번 주 월요일로 초기 날짜 설정
             />
         </div>
     );

@@ -12,7 +12,7 @@ interface CustomEventProps extends EventRendererProps {
     handleDeleteEvent: (eventId: string | number) => void;
 }
 
-const CustomEventComponent: React.FC<CustomEventProps> = ({ event, handleDeleteEvent, ...rest }) => {
+const CustomEventBox: React.FC<CustomEventProps> = ({ event, handleDeleteEvent, ...rest }) => {
     const [isHovered, setIsHovered] = useState(false);
     const customEvent = event as CustomEvent;
     const startHour = event.start.getHours();
@@ -89,4 +89,4 @@ const CustomEventComponent: React.FC<CustomEventProps> = ({ event, handleDeleteE
     );
 };
 
-export default CustomEventComponent;
+export default CustomEventBox;

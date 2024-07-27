@@ -1,5 +1,6 @@
 "use client"
-import Timetable from "./components/Timetable";
+
+import Timetable from "./components/TimeTable/Timetable";
 
 export default function Home() {
   return (
