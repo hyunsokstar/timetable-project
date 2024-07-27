@@ -1,10 +1,12 @@
 import React, { useState, ChangeEvent } from 'react';
 import { Scheduler } from "@aldabil/react-scheduler";
 import type { ProcessedEvent, EventActions, EventRendererProps } from "@aldabil/react-scheduler/types";
+import { FaPalette } from 'react-icons/fa';
 
 interface CustomEvent extends ProcessedEvent {
     teacher?: string;
     color: string;
+    contentId?: number;
 }
 
 const Timetable: React.FC = () => {
@@ -136,6 +138,7 @@ const Timetable: React.FC = () => {
         const [color, setColor] = useState(event?.color || "#3174ad");
         const [startTime, setStartTime] = useState(initStartDate.toTimeString().slice(0, 5));
         const [endTime, setEndTime] = useState(initEndDate.toTimeString().slice(0, 5));
+        const [showColorPicker, setShowColorPicker] = useState(false);
 
         const submit = () => {
             const start = new Date(selectedDate);
@@ -154,6 +157,7 @@ const Timetable: React.FC = () => {
 
             const newEvent: CustomEvent = {
                 event_id: event?.event_id || Math.random(),
+                contentId: event?.contentId || Date.now(),
                 title,
                 teacher,
                 color,
@@ -161,6 +165,7 @@ const Timetable: React.FC = () => {
                 end,
             };
 
+            console.log("Submitting event:", newEvent);
             scheduler.onConfirm(newEvent, event ? "edit" : "create");
             scheduler.close();
         };
@@ -185,15 +190,41 @@ const Timetable: React.FC = () => {
                         style={{ width: '100%', padding: '0.5rem' }}
                     />
                 </div>
-                <div style={{ marginBottom: '1rem' }}>
+                <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <label>색상</label>
-                    <input
-                        type="color"
-                        value={color}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => setColor(e.target.value)}
-                        style={{ width: '100%', padding: '0.5rem' }}
-                    />
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div
+                            style={{
+                                width: '30px',
+                                height: '30px',
+                                backgroundColor: color,
+                                marginRight: '10px',
+                                border: '1px solid #ccc',
+                            }}
+                        ></div>
+                        <button
+                            onClick={() => setShowColorPicker(!showColorPicker)}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: '5px',
+                            }}
+                        >
+                            <FaPalette size={20} />
+                        </button>
+                    </div>
                 </div>
+                {showColorPicker && (
+                    <div style={{ marginBottom: '1rem' }}>
+                        <input
+                            type="color"
+                            value={color}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => setColor(e.target.value)}
+                            style={{ width: '100%' }}
+                        />
+                    </div>
+                )}
                 <div style={{ marginBottom: '1rem' }}>
                     <label>시작 시간</label>
                     <input
@@ -229,7 +260,7 @@ const Timetable: React.FC = () => {
             prevEvents.map(e => e.event_id === updatedEvent.event_id ? updatedEvent : e)
         );
         console.log(`Event ${updatedEvent.event_id} moved successfully`);
-        console.log(`Event ${updatedEvent} ?? `, updatedEvent);
+        console.log(`Updated Event:`, updatedEvent);
         return updatedEvent;
     };
 
@@ -237,19 +268,25 @@ const Timetable: React.FC = () => {
         event: CustomEvent,
         action: EventActions
     ): Promise<CustomEvent> => {
+        console.log(`Handling ${action} action for event:`, event);
+
         if (action === "create") {
-            const newEvent = { ...event, event_id: Date.now() };
+            const newEvent = { ...event, event_id: Date.now(), contentId: Date.now() };
             setEvents(prevEvents => [...prevEvents, newEvent]);
-            console.log(`New event created with id ${newEvent.event_id}`);
+            console.log(`New event created:`, newEvent);
             return newEvent;
         } else if (action === "edit") {
             setEvents(prevEvents =>
                 prevEvents.map(e => e.event_id === event.event_id ? event : e)
             );
-            console.log(`Event ${event.event_id} updated successfully`);
+            console.log(`Event updated:`, event);
+            return event;
+        } else if (action === "delete") {
+            setEvents(prevEvents => prevEvents.filter(e => e.event_id !== event.event_id));
+            console.log(`Event deleted:`, event);
             return event;
         }
-        throw new Error("Invalid action");
+        throw new Error(`Invalid action: ${action}`);
     };
 
     return (
