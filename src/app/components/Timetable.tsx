@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Scheduler } from "@aldabil/react-scheduler";
 import type { ProcessedEvent, EventActions, EventRendererProps } from "@aldabil/react-scheduler/types";
-import { TextField, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 
 // ProcessedEvent 타입을 확장하여 teacher 필드 추가
 interface CustomEvent extends ProcessedEvent {
@@ -112,11 +111,20 @@ const Timetable: React.FC = () => {
         updatedEvent: CustomEvent,
         originalEvent: CustomEvent
     ): Promise<CustomEvent | void> => {
+        // API 호출 위치: 이벤트 드롭 시 업데이트
+        // PUT 요청: `/api/events/${updatedEvent.event_id}`
+        // 요청 데이터: { start: updatedEvent.start, end: updatedEvent.end }
+
+        // API 호출 성공 시:
         setEvents(prevEvents =>
             prevEvents.map(e => e.event_id === updatedEvent.event_id ? updatedEvent : e)
         );
         console.log(`Event ${updatedEvent.event_id} moved successfully`);
         return updatedEvent;
+
+        // API 호출 실패 시:
+        // console.error("Error updating event:", error);
+        // return originalEvent;
     };
 
     const handleConfirm = async (
@@ -124,11 +132,21 @@ const Timetable: React.FC = () => {
         action: EventActions
     ): Promise<CustomEvent> => {
         if (action === "create") {
-            const newEvent = { ...event, event_id: Date.now() };
+            // API 호출 위치: 새 이벤트 생성
+            // POST 요청: '/api/events'
+            // 요청 데이터: event 객체
+
+            // API 호출 성공 시:
+            const newEvent = { ...event, event_id: Date.now() }; // 임시 ID 생성
             setEvents(prevEvents => [...prevEvents, newEvent]);
             console.log(`New event created with id ${newEvent.event_id}`);
             return newEvent;
         } else if (action === "edit") {
+            // API 호출 위치: 기존 이벤트 수정
+            // PUT 요청: `/api/events/${event.event_id}`
+            // 요청 데이터: event 객체
+
+            // API 호출 성공 시:
             setEvents(prevEvents =>
                 prevEvents.map(e => e.event_id === event.event_id ? event : e)
             );
@@ -136,54 +154,6 @@ const Timetable: React.FC = () => {
             return event;
         }
         throw new Error("Invalid action");
-    };
-
-    const customEditor = (scheduler: any) => {
-        const event = scheduler.edited;
-        const [title, setTitle] = useState(event?.title || "");
-        const [teacher, setTeacher] = useState(event?.teacher || "");
-
-        const handleSubmit = () => {
-            scheduler.onConfirm({
-                ...event,
-                title,
-                teacher,
-                event_id: event?.event_id || Math.random(),
-            }, event ? "edit" : "create");
-            scheduler.close();
-        };
-
-        return (
-            <Dialog open={true} onClose={() => scheduler.close()}>
-                <DialogTitle>{event ? "수업 수정" : "새 수업 추가"}</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        label="수업명"
-                        type="text"
-                        fullWidth
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                    />
-                    <TextField
-                        margin="dense"
-                        label="교사"
-                        type="text"
-                        fullWidth
-                        value={teacher}
-                        onChange={(e) => setTeacher(e.target.value)}
-                    />
-
-                    날짜 수정 컴퍼넌트 추가 필요
-
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => scheduler.close()}>취소</Button>
-                    <Button onClick={handleSubmit}>확인</Button>
-                </DialogActions>
-            </Dialog>
-        );
     };
 
     return (
@@ -209,7 +179,6 @@ const Timetable: React.FC = () => {
                 disableViewNavigator={true}
                 hourFormat="24"
                 eventRenderer={customEventRenderer}
-                customEditor={customEditor}
             />
         </div>
     );
