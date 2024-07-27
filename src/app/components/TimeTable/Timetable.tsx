@@ -1,9 +1,10 @@
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState } from 'react';
 import { Scheduler } from "@aldabil/react-scheduler";
 import type { ProcessedEvent, EventActions, EventRendererProps } from "@aldabil/react-scheduler/types";
 import CustomTimeTableHeader from './CustomTimeTableHeader';
 import CustomTimeTableLeftColumns from './CustomTimeTableLeftColumns';
 import CustomSubjectRenderer from './CustomSubjectRenderer';
+import TimeTableCustomEditor from './TimeTableCustomEditor';
 
 interface CustomEvent extends ProcessedEvent {
     teacher?: string;
@@ -15,12 +16,16 @@ const Timetable: React.FC = () => {
     // 현재 날짜를 기준으로 이번 주의 월요일을 찾습니다.
     const getThisMonday = () => {
         const today = new Date();
+
+        console.log("today", today);
+
         const day = today.getDay();
-        const diff = today.getDate() - day + (day === 0 ? -6 : 1); // 일요일이면 전 주 월요일로
+        const diff = today.getDate() - day + (day === 0 ? -6 : 1); // 일요일이면 같은 주의 월요일로
         return new Date(today.setDate(diff));
     };
 
     const monday = getThisMonday();
+    console.log("monday", monday);
 
     const [events, setEvents] = useState<CustomEvent[]>([
         {
@@ -58,99 +63,7 @@ const Timetable: React.FC = () => {
 
     const customEditor = (scheduler: any) => {
         const event = scheduler.edited as CustomEvent;
-        const selectedDate = new Date(scheduler.state.start.value);
-
-        const initStartDate = event ? new Date(event.start) : selectedDate;
-        const initEndDate = event ? new Date(event.end) : new Date(selectedDate.getTime() + 60 * 60 * 1000);
-
-        const [title, setTitle] = useState(event?.title || "");
-        const [teacher, setTeacher] = useState(event?.teacher || "");
-        const [color, setColor] = useState(event?.color || "#3174ad");
-        const [startTime, setStartTime] = useState(initStartDate.toTimeString().slice(0, 5));
-        const [endTime, setEndTime] = useState(initEndDate.toTimeString().slice(0, 5));
-
-        const submit = () => {
-            const start = new Date(selectedDate);
-            const end = new Date(selectedDate);
-
-            const [startHours, startMinutes] = startTime.split(':').map(Number);
-            const [endHours, endMinutes] = endTime.split(':').map(Number);
-
-            start.setHours(startHours, startMinutes);
-            end.setHours(endHours, endMinutes);
-
-            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-                alert("유효한 시간을 입력해주세요.");
-                return;
-            }
-
-            const newEvent: CustomEvent = {
-                event_id: event?.event_id || Math.random(),
-                contentId: event?.contentId || Date.now(),
-                title,
-                teacher,
-                color,
-                start,
-                end,
-            };
-
-            console.log("Submitting event:", newEvent);
-            scheduler.onConfirm(newEvent, event ? "edit" : "create");
-            scheduler.close();
-        };
-
-        return (
-            <div style={{ padding: '1rem' }}>
-                <div style={{ marginBottom: '1rem' }}>
-                    <label>과목</label>
-                    <input
-                        type="text"
-                        value={title}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
-                        style={{ width: '100%', padding: '0.5rem' }}
-                    />
-                </div>
-                <div style={{ marginBottom: '1rem' }}>
-                    <label>선생님</label>
-                    <input
-                        type="text"
-                        value={teacher}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => setTeacher(e.target.value)}
-                        style={{ width: '100%', padding: '0.5rem' }}
-                    />
-                </div>
-                <div style={{ marginBottom: '1rem' }}>
-                    <label>색상</label>
-                    <input
-                        type="color"
-                        value={color}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => setColor(e.target.value)}
-                        style={{ width: '100%', padding: '0.5rem' }}
-                    />
-                </div>
-                <div style={{ marginBottom: '1rem' }}>
-                    <label>시작 시간</label>
-                    <input
-                        type="time"
-                        value={startTime}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => setStartTime(e.target.value)}
-                        style={{ width: '100%', padding: '0.5rem' }}
-                    />
-                </div>
-                <div style={{ marginBottom: '1rem' }}>
-                    <label>종료 시간</label>
-                    <input
-                        type="time"
-                        value={endTime}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => setEndTime(e.target.value)}
-                        style={{ width: '100%', padding: '0.5rem' }}
-                    />
-                </div>
-                <button onClick={submit} style={{ padding: '0.5rem 1rem', backgroundColor: '#4CAF50', color: 'white', border: 'none', cursor: 'pointer' }}>
-                    {event ? "수정" : "생성"}
-                </button>
-            </div>
-        );
+        return <TimeTableCustomEditor scheduler={scheduler} event={event} />;
     };
 
     const handleEventDrop = async (
@@ -192,6 +105,9 @@ const Timetable: React.FC = () => {
         throw new Error(`Invalid action: ${action}`);
     };
 
+    // 추가된 디버깅 코드
+    console.log("Event dates:", events.map(e => e.start));
+
     return (
         <div style={{ height: '100vh', width: "100%", padding: '20px' }}>
             <Scheduler
@@ -199,7 +115,7 @@ const Timetable: React.FC = () => {
                 view="week"
                 week={{
                     weekDays: [0, 1, 2, 3, 4, 5, 6],
-                    weekStartOn: 0,
+                    weekStartOn: 1, // 변경됨: 0에서 1로 (월요일로 설정)
                     startHour: 9,
                     endHour: 16,
                     step: 60,
@@ -218,7 +134,7 @@ const Timetable: React.FC = () => {
                     <CustomSubjectRenderer {...props} handleDeleteEvent={handleDeleteEvent} />
                 )}
                 customEditor={customEditor}
-                selectedDate={monday} // 이번 주 월요일로 초기 날짜 설정
+                selectedDate={monday}
             />
         </div>
     );

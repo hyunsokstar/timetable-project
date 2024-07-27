@@ -1,7 +1,7 @@
 import React from 'react';
 
 const CustomTimeTableHeader = (day: Date) => {
-    const dayNames = ['월', '화', '수', '목', '금', '토', '일'];
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
     const dayIndex = day.getDay();
 
     return (
