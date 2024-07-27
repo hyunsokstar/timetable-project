@@ -1,7 +1,8 @@
 import React, { useState, ChangeEvent } from 'react';
 import { Scheduler } from "@aldabil/react-scheduler";
 import type { ProcessedEvent, EventActions, EventRendererProps } from "@aldabil/react-scheduler/types";
-import { FaPalette } from 'react-icons/fa';
+import { FaTimes } from 'react-icons/fa';
+import CustomEventComponent from './CustomEventComponent';
 
 interface CustomEvent extends ProcessedEvent {
     teacher?: string;
@@ -68,61 +69,23 @@ const Timetable: React.FC = () => {
         return <div></div>;
     };
 
+    const handleDeleteEvent = (eventId: string | number) => {
+        setEvents(prevEvents => prevEvents.filter(e => e.event_id !== eventId));
+    };
+
     const customEventRenderer = (props: EventRendererProps) => {
         const { event, ...rest } = props;
         const customEvent = event as CustomEvent;
         const startHour = event.start.getHours();
         const endHour = event.end.getHours();
         const duration = endHour - startHour;
+        // const [isHovered, setIsHovered] = useState(false);
 
         return (
-            <div
-                {...rest}
-                style={{
-                    backgroundColor: customEvent.color,
-                    color: 'white',
-                    padding: '4px',
-                    borderRadius: '4px',
-                    fontSize: '0.85rem',
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    boxShadow: `0 0 0 1px ${customEvent.color}`,
-                }}
-            >
-                <div style={{ fontSize: '0.7rem', alignSelf: 'flex-start' }}>
-                    {duration}시간
-                </div>
-                <div style={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    textAlign: 'center'
-                }}>
-                    <div style={{ fontWeight: 'bold' }}>{event.title}</div>
-                    {customEvent.teacher && (
-                        <div style={{ fontSize: '0.75rem' }}>교사: {customEvent.teacher}</div>
-                    )}
-                </div>
-                {Array.from({ length: duration }).map((_, index) => (
-                    <div
-                        key={index}
-                        style={{
-                            position: 'absolute',
-                            left: 0,
-                            right: 0,
-                            top: `${(index + 1) * (100 / duration)}%`,
-                            borderBottom: '1px dashed rgba(255, 255, 255, 0.3)',
-                        }}
-                    />
-                ))}
-            </div>
+            <CustomEventComponent
+                {...props}
+                handleDeleteEvent={handleDeleteEvent}
+            />
         );
     };
 
@@ -138,7 +101,6 @@ const Timetable: React.FC = () => {
         const [color, setColor] = useState(event?.color || "#3174ad");
         const [startTime, setStartTime] = useState(initStartDate.toTimeString().slice(0, 5));
         const [endTime, setEndTime] = useState(initEndDate.toTimeString().slice(0, 5));
-        const [showColorPicker, setShowColorPicker] = useState(false);
 
         const submit = () => {
             const start = new Date(selectedDate);
@@ -190,41 +152,15 @@ const Timetable: React.FC = () => {
                         style={{ width: '100%', padding: '0.5rem' }}
                     />
                 </div>
-                <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ marginBottom: '1rem' }}>
                     <label>색상</label>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <div
-                            style={{
-                                width: '30px',
-                                height: '30px',
-                                backgroundColor: color,
-                                marginRight: '10px',
-                                border: '1px solid #ccc',
-                            }}
-                        ></div>
-                        <button
-                            onClick={() => setShowColorPicker(!showColorPicker)}
-                            style={{
-                                background: 'none',
-                                border: 'none',
-                                cursor: 'pointer',
-                                padding: '5px',
-                            }}
-                        >
-                            <FaPalette size={20} />
-                        </button>
-                    </div>
+                    <input
+                        type="color"
+                        value={color}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => setColor(e.target.value)}
+                        style={{ width: '100%', padding: '0.5rem' }}
+                    />
                 </div>
-                {showColorPicker && (
-                    <div style={{ marginBottom: '1rem' }}>
-                        <input
-                            type="color"
-                            value={color}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) => setColor(e.target.value)}
-                            style={{ width: '100%' }}
-                        />
-                    </div>
-                )}
                 <div style={{ marginBottom: '1rem' }}>
                     <label>시작 시간</label>
                     <input
