@@ -1,51 +1,59 @@
-
 "use client";
 
 import React from 'react';
 import { Scheduler } from "@aldabil/react-scheduler";
-import type { SchedulerHelpers, ProcessedEvent } from "@aldabil/react-scheduler/types";
+import type { ProcessedEvent, EventActions } from "@aldabil/react-scheduler/types";
 
 const Timetable: React.FC = () => {
     const events: ProcessedEvent[] = [
         {
             event_id: 1,
             title: "수학",
-            start: new Date("2024-07-27T09:00:00"),
-            end: new Date("2024-07-27T10:00:00"),
+            start: new Date("2024-07-21T09:00:00"),
+            end: new Date("2024-07-21T10:00:00"),
         },
         // 다른 수업들을 여기에 추가
     ];
 
     const handleConfirm = async (
         event: ProcessedEvent,
-        action: "create" | "edit",
-        helpers: SchedulerHelpers
-    ) => {
-        if (action === "edit") {
-            // 이벤트 수정 로직
-            console.log("수정된 이벤트:", event);
-        } else {
-            // 새 이벤트 생성 로직
-            console.log("새 이벤트:", event);
-        }
-        helpers.close();
+        action: EventActions
+    ): Promise<ProcessedEvent> => {
+        console.log(action, "이벤트:", event);
         return event;
     };
 
+    const customDayScaleHeader = (day: Date) => {
+        const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+        const dayIndex = day.getDay();
+
+        return (
+            <div style={{ textAlign: 'center', fontWeight: 'bold', padding: '8px', backgroundColor: '#f0f0f0' }}>
+                {dayNames[dayIndex]}
+            </div>
+        );
+    };
+
     return (
-        <Scheduler
-            events={events}
-            view="week"
-            week={{
-                weekDays: [0, 1, 2, 3, 4, 5],
-                weekStartOn: 1,
-                startHour: 9,
-                endHour: 18,
-                step: 60,
-            }}
-            onConfirm={handleConfirm}
-            draggable={true}
-        />
+        <div style={{ height: '100vh', padding: '20px' }}>
+            <Scheduler
+                events={events}
+                view="week"
+                week={{
+                    weekDays: [0, 1, 2, 3, 4, 5], // 일요일부터 금요일까지
+                    weekStartOn: 0, // 일요일부터 시작
+                    startHour: 9,
+                    endHour: 19,
+                    step: 60,
+                    headRenderer: customDayScaleHeader
+                }}
+                onConfirm={handleConfirm}
+                draggable={true}
+                height={600}
+                navigation={false}
+                disableViewNavigator={true}
+            />
+        </div>
     );
 };
 
